@@ -129,6 +129,35 @@
   #m-input:focus { outline:none; border-color:#00ff88; box-shadow:0 0 22px rgba(0,255,136,.35); }
   @media (pointer:coarse) { #m-input { display:block; } }
 
+  /* MOBILE PAUSE BUTTON */
+  #mobile-pause { display:none; position:fixed; top:12px; right:12px; z-index:20;
+    width:50px; height:50px; border-radius:50%; border:2px solid #ffd93d;
+    background:rgba(12,20,38,.9); color:#ffd93d; font-size:24px;
+    box-shadow:0 4px 16px rgba(0,0,0,.5); }
+  #mobile-pause:active { transform:scale(0.95); background:rgba(255,217,61,.2); }
+  @media (pointer:coarse) { #mobile-pause { display:flex; align-items:center; justify-content:center; } }
+
+  /* MOBILE BOTTOM BAR */
+  #mobile-bar { display:none; position:fixed; bottom:0; left:0; right:0; z-index:15;
+    background:rgba(8,12,24,.95); backdrop-filter:blur(10px);
+    border-top:1px solid rgba(0,255,136,.2); padding:10px 12px; gap:8px; }
+  #mobile-bar.show { display:flex; }
+  #mobile-bar .bar-input { flex:1; background:#0a1020; border:2px solid #00ff88;
+    border-radius:12px; padding:14px; color:#fff; font-size:20px; text-align:center;
+    font-family:inherit; }
+  #mobile-bar .bar-input:focus { outline:none; border-color:#00ff88; box-shadow:0 0 16px rgba(0,255,136,.3); }
+  #mobile-bar .bar-btn { width:52px; height:52px; border-radius:12px; border:2px solid #1e2e50;
+    background:#101830; color:#fff; font-size:22px; flex-shrink:0; }
+  #mobile-bar .bar-btn:active { border-color:#00ff88; background:#162040; }
+  @media (pointer:coarse) { #mobile-bar.show { display:flex; } }
+
+  /* MOBILE FEEDBACK */
+  #type-flash { position:fixed; bottom:80px; left:50%; transform:translateX(-50%);
+    background:rgba(0,255,136,.15); border:1px solid #00ff88; border-radius:12px;
+    padding:6px 16px; color:#00ff88; font-size:16px; font-weight:800;
+    opacity:0; transition:opacity .15s; pointer-events:none; z-index:20; }
+  #type-flash.show { opacity:1; }
+
   #bigmsg {
     position:absolute; top:34%; left:0; right:0; text-align:center; z-index:4;
     font-family:'Creepster','Rubik',cursive; font-weight:400; letter-spacing:4px;
@@ -219,7 +248,8 @@
           💣 <b>Bomba</b> → Destruye todos los zombies en pantalla<br>
           🛡️ <b>Escudo</b> → Bloquea daño por 6 segundos<br>
           ⏳ <b>Ralentizar</b> → Zombies al 35% velocidad por 5s<br><br>
-          <span style="color:#ffd93d">¡Los poderes aparecen como items brillantes! Escribe su palabra para activarlos.</span>
+          <span style="color:#ffd93d">¡Los poderes aparecen como items brillantes! Escribe su palabra para activarlos.</span><br><br>
+          <b style="color:#4dabff">📱 CELULAR:</b> Usa la barra inferior para escribir. Desliza arriba/abajo en la pantalla para cambiar carril. Toca ⏸️ para pausar.
         </div>
         <button class="btn" id="btn-start">▶ JUGAR</button>
         <button class="btn alt" id="btn-how">❓ CÓMO JUGAR</button>
@@ -251,11 +281,20 @@
   </div>
 
   <div id="target-word">Pulsa JUGAR…</div>
-  <div id="hint"><kbd>↑</kbd><kbd>↓</kbd> cambiar carril · <kbd>P</kbd> pausar · ✨ Items brillantes = poderes</div>
+  <div id="hint"><kbd>↑</kbd><kbd>↓</kbd> cambiar carril · <kbd>P</kbd> pausar · ✨ Items brillantes = poderes · 📱 Desliza para cambiar carril</div>
   <label class="voice-toggle" id="voice-toggle"><input type="checkbox" id="voice-check" checked> 🔊 Voz: <span id="voice-state">ON</span></label>
   <div id="touch"><button id="t-up">⬆️</button><button id="t-down">⬇️</button></div>
   <input id="m-input" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="📱 Toca aquí para sacar el teclado">
 </div>
+
+<!-- MOBILE CONTROLS -->
+<button id="mobile-pause" onclick="if(state==='play')pauseGame();else if(state==='paused')resumeGame();">⏸️</button>
+<div id="mobile-bar">
+  <button class="bar-btn" id="mb-up">⬆️</button>
+  <input class="bar-input" id="mb-input" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Escribe aquí...">
+  <button class="bar-btn" id="mb-down">⬇️</button>
+</div>
+<div id="type-flash"></div>
 
 <script>
 "use strict";
@@ -448,19 +487,77 @@ function moveTommy(d){
 }
 $('t-up').onclick=()=>{ if(state==='play') moveTommy(-1); };
 $('t-down').onclick=()=>{ if(state==='play') moveTommy(1); };
+
+// Mobile bottom bar
+const mbInput = document.getElementById('mb-input');
+const mbUp = document.getElementById('mb-up');
+const mbDown = document.getElementById('mb-down');
+const mobileBar = document.getElementById('mobile-bar');
+const typeFlash = document.getElementById('type-flash');
+const isMobile = window.matchMedia && matchMedia('(pointer:coarse)').matches;
+
+// Show mobile bar on touch devices
+if(isMobile) mobileBar.classList.add('show');
+
+// Mobile input handling
+function handleMobileInput(val){
+  if(state!=='play'||!val) return;
+  for(const raw of val.toLowerCase()){
+    if(/[a-zñ]/.test(raw)){
+      typeChar(raw);
+      showTypeFlash(raw);
+    }
+    if(state!=='play') break;
+  }
+}
+
+function showTypeFlash(ch){
+  typeFlash.textContent = ch.toUpperCase();
+  typeFlash.classList.add('show');
+  clearTimeout(showTypeFlash._t);
+  showTypeFlash._t = setTimeout(()=>typeFlash.classList.remove('show'), 200);
+}
+
+mbInput.addEventListener('input', ()=>{
+  const v=mbInput.value; mbInput.value='';
+  handleMobileInput(v);
+});
+mbInput.addEventListener('keydown', e=>e.stopPropagation());
+
+// Mobile buttons
+mbUp.addEventListener('click', ()=>{ if(state==='play') moveTommy(-1); });
+mbDown.addEventListener('click', ()=>{ if(state==='play') moveTommy(1); });
+
+// Also handle old m-input
 const mInput=$('m-input');
 mInput.addEventListener('input', ()=>{
   const v=mInput.value; mInput.value='';
-  if(state!=='play'||!v) return;
-  for(const raw of v.toLowerCase()){
-    if(/[a-zñ]/.test(raw)) typeChar(raw);
-    if(state!=='play') break;
-  }
+  handleMobileInput(v);
 });
 mInput.addEventListener('keydown', e=>e.stopPropagation());
+
+// Focus input on canvas tap
 canvas.addEventListener('pointerdown', ()=>{
-  if(window.matchMedia && matchMedia('(pointer:coarse)').matches) mInput.focus({preventScroll:true});
+  if(isMobile && mbInput){
+    mbInput.focus({preventScroll:true});
+  } else {
+    mInput.focus({preventScroll:true});
+  }
 });
+
+// Touch swipe support for lane switching
+let touchStartY = 0;
+canvas.addEventListener('touchstart', e=>{
+  touchStartY = e.touches[0].clientY;
+}, {passive:true});
+canvas.addEventListener('touchmove', e=>{
+  if(state!=='play') return;
+  const dy = e.touches[0].clientY - touchStartY;
+  if(Math.abs(dy) > 40){
+    moveTommy(dy > 0 ? 1 : -1);
+    touchStartY = e.touches[0].clientY;
+  }
+}, {passive:true});
 
 function typeChar(ch){
   const result = findTarget(ch);
@@ -812,8 +909,9 @@ function startGame(){
   pu = { slowActive:false, slowTimer:0, shieldActive:false, shieldTimer:0 };
   shieldOverlay.style.opacity='0';
   showMsg('¡SOBREVIVE! 🧟', '#00ff88');
-  if(window.matchMedia && matchMedia('(pointer:coarse)').matches){
-    setTimeout(()=>{ try{ mInput.focus({preventScroll:true}); }catch(e){} },400);
+  // Focus mobile input
+  if(isMobile && mbInput){
+    setTimeout(()=>{ try{ mbInput.focus({preventScroll:true}); }catch(e){} },400);
   }
   beep(440,.15,'square',.08);
 }
