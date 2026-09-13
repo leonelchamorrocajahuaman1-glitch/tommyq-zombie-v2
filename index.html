@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tommy Q — Defensor Zombie | Juego de Mecanografía en Español</title>
+<meta name="description" content="Tommy Q Defensor Zombie: el juego de mecanografía en español. Escribe para disparar, usa poderes, defiende tu barricada y sobrevive al apocalipsis zombie.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Creepster&family=Rubik:wght@400;600;800&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#050810; color:#fff; font-family:'Rubik','Segoe UI',Verdana,sans-serif; overflow-x:hidden;
+    background-image:
+      radial-gradient(circle at 90% 5%, rgba(0,255,136,.04) 0%, transparent 25%),
+      radial-gradient(circle at 10% 90%, #1a0a2e 0%, transparent 35%),
+      radial-gradient(circle at 50% 110%, #0a1528 0%, transparent 50%); }
+  body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:3;
+    background:radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,.55) 100%); }
+
+  .stars { position:fixed; inset:0; z-index:0; pointer-events:none; }
+
+  .moon { position:fixed; top:40px; right:8%; width:100px; height:100px; border-radius:50%;
+    background:radial-gradient(circle at 35% 35%, #fffbe0, #e8e2b8 55%, #cfc89e);
+    box-shadow:0 0 80px 30px rgba(245,243,206,.12), 0 0 160px 60px rgba(245,243,206,.05);
+    z-index:0; animation:moonfloat 8s ease-in-out infinite; }
+  @keyframes moonfloat { 50% { transform:translateY(-12px); } }
+
+  .fog { position:fixed; border-radius:50%; filter:blur(60px); z-index:0; pointer-events:none; opacity:.45; }
+  .fog.f1 { width:500px; height:140px; left:-140px; bottom:10%; background:rgba(100,130,170,.12); animation:drift 16s ease-in-out infinite; }
+  .fog.f2 { width:600px; height:160px; right:-180px; bottom:30%; background:rgba(0,255,136,.05); animation:drift 20s ease-in-out infinite reverse; }
+  @keyframes drift { 50% { transform:translateX(80px); } }
+
+  /* NAV */
+  nav { position:sticky; top:0; z-index:10; display:flex; justify-content:space-between; align-items:center;
+    padding:16px min(5vw,50px); background:rgba(5,8,16,.8); backdrop-filter:blur(16px);
+    border-bottom:1px solid rgba(0,255,136,.12); }
+  .logo { font-family:'Creepster',cursive; font-size:28px; letter-spacing:4px; text-shadow:0 3px 0 #000; }
+  .logo span { color:#00ff88; text-shadow:0 3px 0 #003d1a, 0 0 20px #00ff88; }
+  .logo .ver { font-family:'Rubik',sans-serif; font-size:11px; color:#5a6c8d; vertical-align:super; margin-left:6px; letter-spacing:0; }
+  .nav-links { display:flex; gap:12px; align-items:center; }
+  .nav-links a { color:#8fa3bf; text-decoration:none; font-size:13px; transition:color .2s; }
+  .nav-links a:hover { color:#00ff88; }
+  .nav-btn { background:linear-gradient(180deg,#00ff88,#00cc6a); color:#002614; font-weight:800;
+    padding:12px 28px; border-radius:14px; text-decoration:none; box-shadow:0 4px 0 #00994f, 0 8px 24px rgba(0,255,136,.3);
+    transition:filter .15s, transform .08s; font-size:15px; }
+  .nav-btn:hover { filter:brightness(1.1); }
+  .nav-btn:active { transform:translateY(3px); box-shadow:0 1px 0 #00994f; }
+
+  /* HERO */
+  .hero { position:relative; z-index:2; text-align:center; padding:70px 20px 10px; max-width:900px; margin:auto; }
+  .badge { display:inline-flex; align-items:center; gap:8px; background:rgba(15,22,40,.85); border:1px solid rgba(0,255,136,.5); color:#00ff88;
+    padding:8px 22px; border-radius:24px; font-size:12px; font-weight:600; letter-spacing:2px; margin-bottom:24px;
+    box-shadow:0 0 24px rgba(0,255,136,.15); animation:fadeDown .7s ease-out; }
+  .badge .dot { width:6px; height:6px; border-radius:50%; background:#00ff88; animation:pulse-dot 2s infinite; }
+  @keyframes pulse-dot { 50% { box-shadow:0 0 8px #00ff88; } }
+  .hero h1 { font-family:'Creepster',cursive; font-weight:400; font-size:clamp(48px,9vw,100px); line-height:1;
+    letter-spacing:5px; text-shadow:0 6px 0 #000, 0 0 50px rgba(0,255,136,.2); animation:fadeUp .7s ease-out; }
+  .hero h1 .green { color:#00ff88; text-shadow:0 6px 0 #003d1a, 0 0 50px #00ff88; }
+  .hero h1 .red { color:#ff4d6a; text-shadow:0 6px 0 #3a0010, 0 0 50px rgba(255,77,106,.4); }
+  @keyframes fadeUp { from { transform:translateY(30px); opacity:0; } }
+  @keyframes fadeDown { from { transform:translateY(-20px); opacity:0; } }
+  .hero p { color:#9fb3c8; font-size:clamp(15px,2.5vw,19px); margin:20px auto 32px; max-width:640px; line-height:1.7; }
+  .hero p b { color:#ffd93d; }
+
+  .cta-row { display:flex; gap:16px; justify-content:center; flex-wrap:wrap; }
+  .btn { display:inline-block; padding:18px 44px; font-size:19px; font-weight:800; border-radius:16px;
+    text-decoration:none; letter-spacing:.5px; font-family:inherit; transition:all .2s; }
+  .btn-play { background:linear-gradient(180deg,#00ff88,#00cc6a); color:#002614;
+    box-shadow:0 6px 0 #00994f, 0 14px 40px rgba(0,255,136,.4); animation:pulse 2.5s infinite; }
+  .btn-play:hover { filter:brightness(1.12); transform:translateY(-2px); box-shadow:0 8px 0 #00994f, 0 18px 50px rgba(0,255,136,.55); }
+  .btn-play:active { transform:translateY(4px); box-shadow:0 1px 0 #00994f; }
+  @keyframes pulse { 50% { box-shadow:0 6px 0 #00994f, 0 14px 56px rgba(0,255,136,.65); } }
+  .btn-how { background:rgba(18,28,50,.85); color:#fff; border:1px solid #2a3a5e; transition:all .2s; }
+  .btn-how:hover { border-color:#00ff88; background:rgba(18,28,50,1); }
+
+  .stats-strip { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:34px; }
+  .pill { background:rgba(12,20,38,.88); border:1px solid #1e2e50; border-radius:32px; padding:10px 22px;
+    font-size:14px; color:#9fb3c8; backdrop-filter:blur(6px); }
+  .pill b { color:#ffd93d; }
+
+  /* PREVIEW */
+  .preview { position:relative; z-index:2; max-width:780px; margin:40px auto 0; padding:0 20px; }
+  .screen { background:linear-gradient(180deg,#0a1228,#0f1a34 60%,#181030); border:1px solid rgba(0,255,136,.3);
+    border-radius:20px; box-shadow:0 0 0 4px #0a0f1e, 0 0 70px rgba(0,255,136,.15), 0 40px 70px rgba(0,0,0,.65);
+    padding:28px 24px 22px; text-align:center; }
+  .screen .row { display:flex; justify-content:space-between; align-items:center; font-size:32px; padding:6px 10px; }
+  .screen .who { font-size:14px; color:#6a7a94; letter-spacing:1px; }
+  .word-tag { display:inline-flex; gap:3px; background:rgba(0,0,0,.7); border:1px solid rgba(255,77,106,.5); border-radius:10px;
+    font-family:monospace; font-weight:700; font-size:18px; letter-spacing:3px; padding:5px 14px; }
+  .word-tag .typed { color:#00ff88; } .word-tag .current { color:#ffd93d; background:#ff4d6a; border-radius:5px; padding:0 4px; animation:char-blink 1s infinite; }
+  .word-tag .remaining { color:#4a5a74; }
+  @keyframes char-blink { 50% { background:#ff7b00; } }
+  .screen .bar { margin:16px auto 4px; background:rgba(10,15,30,.92); border:1px solid rgba(0,255,136,.25);
+    border-radius:14px; padding:12px; font-size:26px; letter-spacing:5px; font-weight:800; font-family:monospace; }
+  .bar .typed { color:#00ff88; text-shadow:0 0 8px rgba(0,255,136,.6); }
+  .bar .current { color:#fff; background:#ff4d6a; border-radius:6px; padding:0 7px; animation:char-blink 1s infinite; }
+  .bar .remaining { color:#3a4a64; }
+
+  #best { display:none; margin:22px auto 0; background:rgba(15,24,48,.92); border:1px solid rgba(255,217,61,.5);
+    border-radius:16px; padding:14px 28px; max-width:500px; font-size:15px; color:#ffd93d;
+    box-shadow:0 0 30px rgba(255,217,61,.12); }
+
+  /* POWER-UPS PREVIEW */
+  .powerups { position:relative; z-index:2; max-width:1020px; margin:54px auto; padding:0 20px; }
+  .powerups h2 { text-align:center; font-family:'Creepster',cursive; font-weight:400; font-size:42px; letter-spacing:4px;
+    margin-bottom:28px; text-shadow:0 4px 0 #000; }
+  .powerups h2 span { color:#ffd93d; text-shadow:0 4px 0 #3a2800, 0 0 20px rgba(255,217,61,.3); }
+  .pu-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:18px; }
+  .pu-card { background:linear-gradient(160deg,#141e38,#0c1528); border:1px solid #1e2e50; border-radius:20px;
+    padding:30px 24px; text-align:center; transition:all .25s; position:relative; overflow:hidden; }
+  .pu-card::before { content:''; position:absolute; top:-50%; left:-50%; width:200%; height:200%;
+    background:radial-gradient(circle,var(--glow) 0%, transparent 60%); opacity:0; transition:opacity .3s; }
+  .pu-card:hover { transform:translateY(-8px); border-color:var(--glow); }
+  .pu-card:hover::before { opacity:.12; }
+  .pu-card .ico { font-size:52px; filter:drop-shadow(0 6px 12px rgba(0,0,0,.6)); position:relative; z-index:1; }
+  .pu-card h3 { margin:14px 0 8px; font-size:20px; position:relative; z-index:1; }
+  .pu-card p { color:#7a8ea8; font-size:14px; line-height:1.65; position:relative; z-index:1; }
+  .pu-card.bomb { --glow:#ff4d6a; }
+  .pu-card.heart { --glow:#ff6b9d; }
+  .pu-card.shield { --glow:#4dabff; }
+  .pu-card.slow { --glow:#ffd93d; }
+
+  /* FEATURES */
+  .features { position:relative; z-index:2; display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:18px; max-width:1040px; margin:54px auto; padding:0 20px; }
+  .card { background:linear-gradient(165deg,#162040,#0c1528); border:1px solid #1e2e50; border-radius:20px;
+    padding:30px 24px; text-align:center; transition:all .25s; }
+  .card:hover { transform:translateY(-8px); border-color:rgba(0,255,136,.5); box-shadow:0 20px 44px rgba(0,0,0,.5), 0 0 36px rgba(0,255,136,.1); }
+  .card .ico { font-size:48px; filter:drop-shadow(0 5px 10px rgba(0,0,0,.5)); }
+  .card h3 { margin:14px 0 8px; font-size:19px; }
+  .card p { color:#7a8ea8; font-size:14px; line-height:1.65; }
+
+  /* HOW */
+  .how { position:relative; z-index:2; max-width:740px; margin:10px auto 50px; padding:0 20px; }
+  .how h2 { text-align:center; font-family:'Creepster',cursive; font-weight:400; font-size:42px; letter-spacing:4px;
+    margin-bottom:24px; text-shadow:0 4px 0 #000; }
+  .step { display:flex; gap:16px; align-items:flex-start; background:rgba(14,22,42,.88); border:1px solid #1e2e50;
+    border-radius:16px; padding:17px 19px; margin-bottom:12px; font-size:15px; color:#9fb3c8; line-height:1.6; }
+  .step b.num { background:linear-gradient(180deg,#00ff88,#00cc6a); color:#002614; min-width:34px; height:34px;
+    border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:800;
+    box-shadow:0 3px 0 #00994f; flex-shrink:0; }
+  kbd { background:#1a2640; border:1px solid #3a4f7e; border-bottom-width:3px; border-radius:7px; padding:2px 8px; font-family:inherit; font-size:13px; }
+
+  /* FOOTER */
+  footer { position:relative; z-index:2; text-align:center; padding:32px 20px; color:#3a4a64; font-size:13px;
+    border-top:1px solid #121a2e; background:rgba(4,6,12,.7); }
+  footer a { color:#00ff88; }
+
+  .float-z { display:inline-block; animation:floaty 3.5s ease-in-out infinite; }
+  @keyframes floaty { 50% { transform:translateY(-10px) rotate(-5deg); } }
+
+  @media (max-width:600px) {
+    nav { padding:12px 16px; }
+    .nav-links { display:none; }
+    .hero { padding:50px 16px 10px; }
+    .hero h1 { font-size:42px; }
+    .btn { padding:16px 32px; font-size:17px; }
+    .pu-grid { grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+<canvas class="stars" id="stars"></canvas>
+<div class="moon"></div>
+<div class="fog f1"></div>
+<div class="fog f2"></div>
+
+<nav>
+  <div class="logo">🧟 TOMMY <span>Q</span><span class="ver">v2.0</span></div>
+  <div class="nav-links">
+    <a href="#poderes">Poderes</a>
+    <a href="#como">Cómo jugar</a>
+    <a class="nav-btn" href="jugar.html">▶ Jugar</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="badge"><div class="dot"></div> JUEGO DE MECANOGRAFÍA · 100% EN ESPAÑOL</div>
+  <h1>ESCRIBE RÁPIDO<br>O TE COMEN <span class="green">LOS <span class="red">ZOMBIES</span></span></h1>
+  <p>Defiende tu barricada del apocalipsis zombie. Cada palabra es un disparo, cada combo una explosión de poder. <b>Sobrevive 2 minutos</b> y conviértete en héroe de la mecanografía.</p>
+  <div class="cta-row">
+    <a class="btn btn-play" href="jugar.html">🧟 ¡JUGAR AHORA!</a>
+    <a class="btn btn-how" href="#poderes">⚡ Poderes</a>
+  </div>
+  <div class="stats-strip">
+    <div class="pill">⏱️ <b>2:00</b> supervivencia</div>
+    <div class="pill">🔤 <b>100%</b> español</div>
+    <div class="pill">🧟 <b>5</b> carriles</div>
+    <div class="pill">⚡ <b>4</b> poderes</div>
+    <div class="pill">🔥 combos <b>ilimitados</b></div>
+  </div>
+</section>
+
+<section class="preview">
+  <div class="screen">
+    <div class="row"><span>🧑‍🌾🪵</span><span><span class="float-z">🧟</span><span class="word-tag"><span class="typed">c</span><span class="typed">a</span><span class="current">s</span><span class="remaining">a</span></span></span><span>🧟‍♀️</span></div>
+    <div class="row"><span class="who">⚡ ¡Cada combo desata poderes!</span><span>🧟‍♂️</span></div>
+    <div class="bar"><span class="typed">c</span><span class="typed">a</span><span class="current">s</span><span class="remaining">a</span></div>
+  </div>
+  <div id="best"></div>
+</section>
+
+<section class="powerups" id="poderes">
+  <h2>⚡ <span>PODERES</span> DEL JUEGO</h2>
+  <div class="pu-grid">
+    <div class="pu-card bomb">
+      <div class="ico">💣</div>
+      <h3>Bomba Nuclear</h3>
+      <p>Alcanza un combo x10 y desata una explosión que destruye TODOS los zombies en pantalla. La pantalla tiembla y el cielo se ilumina.</p>
+    </div>
+    <div class="pu-card heart">
+      <div class="ico">💖</div>
+      <h3>Vida Extra</h3>
+      <p>Alcanza un combo x5 para recuperar 25% de la barricada. ¡Cada 5 combo muertos es una oportunidad de salvar tu madera!</p>
+    </div>
+    <div class="pu-card shield">
+      <div class="ico">🛡️</div>
+      <h3>Escudo Temporal</h3>
+      <p>Alcanza un combo x15 y activa un escudo que bloquea el daño por 5 segundos. Los zombies golpean pero no rompen nada.</p>
+    </div>
+    <div class="pu-card slow">
+      <div class="ico">⏳</div>
+      <h3>Ralentizar</h3>
+      <p>Alcanza un combo x8 y todos los zombies se ralentizan durante 4 segundos. ¡Tiempo extra para escribir!</p>
+    </div>
+  </div>
+</section>
+
+<section class="features">
+  <div class="card"><div class="ico">⌨️</div><h3>Aprende escribiendo</h3><p>Mejora velocidad y precisión mientras juegas. PPM, precisión y combo máximo al final.</p></div>
+  <div class="card"><div class="ico">🪵</div><h3>Defiende la barricada</h3><p>Si un zombie llega a tu madera, la golpea hasta romperla. ¡No dejes que se acerquen!</p></div>
+  <div class="card"><div class="ico">🔥</div><h3>Combos y puntos</h3><p>Encadena muertes para multiplicar puntos y desatar poderes. ¿Llegas al combo x20?</p></div>
+  <div class="card"><div class="ico">📈</div><h3>Dificultad progresiva</h3><p>Empiezas con palabras cortas y terminas con "descomposición". Cada vez más rápido.</p></div>
+</section>
+
+<section class="how" id="como">
+  <h2>❓ Cómo jugar</h2>
+  <div class="step"><b class="num">1</b><span>Pulsa <b>¡JUGAR AHORA!</b> y aparecerán zombies caminando hacia tu barricada, cada uno con una palabra encima.</span></div>
+  <div class="step"><b class="num">2</b><span><b>Escribe</b> las letras de los zombies para dispararles. Tommy apunta solo al más cercano. Cada letra correcta es una bala.</span></div>
+  <div class="step"><b class="num">3</b><span>Si quieres, muévete entre carriles con <kbd>↑</kbd> <kbd>↓</kbd>. Las palabras son 100% en español, sin tildes.</span></div>
+  <div class="step"><b class="num">4</b><span><b>¡Combos!</b> Sin fallar: x5 = 💖 Vida, x8 = ⏳ Ralentizar, x10 = 💣 Bomba, x15 = 🛡️ Escudo. ¡Cuanto más combo, más poder!</span></div>
+  <div class="step"><b class="num">5</b><span>Sobrevive <b>2:00 minutos</b>. Si la barricada llega a 0%, pierdes. ¡Sin tildes, para escribir más rápido!</span></div>
+  <div class="cta-row" style="margin-top:26px"><a class="btn btn-play" href="jugar.html">▶ EMPEZAR A JUGAR</a></div>
+</section>
+
+<footer>
+  🧟 Tommy Q v2.0 — Defensor Zombie · Hecho con 💚 para practicar mecanografía ·
+  <a href="jugar.html">Jugar</a>
+</footer>
+
+<script>
+const c=document.getElementById('stars'),x=c.getContext('2d');
+function rs(){c.width=innerWidth;c.height=innerHeight;}
+rs();addEventListener('resize',rs);
+const s=Array.from({length:140},()=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight*.75,r:Math.random()*1.8+.4,tw:Math.random()*6.28,sp:Math.random()*.3+.1}));
+(function anim(){x.clearRect(0,0,c.width,c.height);
+s.forEach(p=>{p.tw+=p.sp;x.globalAlpha=.3+Math.sin(p.tw)*.4;x.fillStyle='#fff';x.fillRect(p.x,p.y,p.r,p.r);});x.globalAlpha=1;requestAnimationFrame(anim);})();
+try{
+  const b=JSON.parse(localStorage.getItem('tommyq_best')||'null');
+  if(b){const d=document.getElementById('best');d.style.display='block';
+    d.innerHTML='🏆 Tu récord: <b>'+b.score+' pts</b> · 🧟 '+b.kills+' · ⌨️ '+b.wpm+' PPM · 🎯 '+b.acc+'% '+(b.won?'· ¡GANADO!':'');}
+}catch(e){}
+</script>
+</body>
+</html>
