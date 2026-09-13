@@ -193,10 +193,8 @@
   </div>
 
   <div class="pu-hud" id="pu-hud">
-    <div class="pu-badge" id="pu-heart" style="--c:#ff6b9d;--g:rgba(255,107,157,.3)"><span class="pu-icon">💖</span>Vida x5 <span class="pu-timer" id="pu-heart-t"></span></div>
-    <div class="pu-badge" id="pu-slow" style="--c:#ffd93d;--g:rgba(255,217,61,.3)"><span class="pu-icon">⏳</span>Lento x8 <span class="pu-timer" id="pu-slow-t"></span></div>
-    <div class="pu-badge" id="pu-bomb" style="--c:#ff4d6a;--g:rgba(255,77,106,.3)"><span class="pu-icon">💣</span>Bomba x10 <span class="pu-timer" id="pu-bomb-t"></span></div>
-    <div class="pu-badge" id="pu-shield" style="--c:#4dabff;--g:rgba(77,171,255,.3)"><span class="pu-icon">🛡️</span>Escudo x15 <span class="pu-timer" id="pu-shield-t"></span></div>
+    <div class="pu-badge" id="pu-slow" style="--c:#ffd93d;--g:rgba(255,217,61,.3)"><span class="pu-icon">⏳</span>Ralentizar <span class="pu-timer" id="pu-slow-t"></span></div>
+    <div class="pu-badge" id="pu-shield" style="--c:#4dabff;--g:rgba(77,171,255,.3)"><span class="pu-icon">🛡️</span>Escudo <span class="pu-timer" id="pu-shield-t"></span></div>
   </div>
 
   <div id="stage">
@@ -216,11 +214,12 @@
           ⬆️⬇️ para <b>mover a Tommy</b> manualmente (opcional)<br>
           🪵 Si un zombie llega a la madera, la golpea hasta romperla<br>
           ⏱️ <b>Sobrevive 2:00 minutos</b> para ganar<br><br>
-          <b style="color:#00ff88">⚡ PODERES POR COMBOS:</b><br>
-          💖 <b>x5 combo</b> → Vida Extra (+25% barricada)<br>
-          ⏳ <b>x8 combo</b> → Ralentizar zombies 4s<br>
-          💣 <b>x10 combo</b> → Bomba Nuclear (destruye todos)<br>
-          🛡️ <b>x15 combo</b> → Escudo Temporal (bloquea daño 5s)
+          <b style="color:#00ff88">⚡ PODERES FLOTANTES:</b><br>
+          💖 <b>Vida</b> → +25% barricada (aparece como item flotante)<br>
+          💣 <b>Bomba</b> → Destruye todos los zombies en pantalla<br>
+          🛡️ <b>Escudo</b> → Bloquea daño por 6 segundos<br>
+          ⏳ <b>Ralentizar</b> → Zombies al 35% velocidad por 5s<br><br>
+          <span style="color:#ffd93d">¡Los poderes aparecen como items brillantes! Escribe su palabra para activarlos.</span>
         </div>
         <button class="btn" id="btn-start">▶ JUGAR</button>
         <button class="btn alt" id="btn-how">❓ CÓMO JUGAR</button>
@@ -252,7 +251,7 @@
   </div>
 
   <div id="target-word">Pulsa JUGAR…</div>
-  <div id="hint"><kbd>↑</kbd><kbd>↓</kbd> cambiar carril · <kbd>P</kbd> pausar · Palabras en español · Sin tildes</div>
+  <div id="hint"><kbd>↑</kbd><kbd>↓</kbd> cambiar carril · <kbd>P</kbd> pausar · ✨ Items brillantes = poderes</div>
   <label class="voice-toggle" id="voice-toggle"><input type="checkbox" id="voice-check" checked> 🔊 Voz: <span id="voice-state">ON</span></label>
   <div id="touch"><button id="t-up">⬆️</button><button id="t-down">⬇️</button></div>
   <input id="m-input" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="📱 Toca aquí para sacar el teclado">
@@ -264,6 +263,17 @@ const FACIL = ["sol","pan","luz","mar","oso","mesa","silla","gato","perro","casa
 const MEDIO = ["cementerio","murcielago","fantasma","calabaza","bosque","trueno","cadena","martillo","linterna","sombra","escalera","ataud","veneno","colina","reloj","cadaver","momia","hechizo","bruja","zombie","monstruo","terror","granja","lancha","esqueleto","araña","murcielago","trampa","puñal"];
 const DIFICIL = ["oscuridad","cementerio","apocalipsis","superviviente","tenebroso","escalofrio","murmurar","pesadilla","alucinacion","destruccion","inquietante","resurreccion","sobrenatural","descomposicion","fosforescente","encrucijada","medianoche","susurrante","abominacion","anniquilar","cataclismo","devastacion","extincion"];
 
+// POWER-UP WORDS (short words for fast pickup)
+const PU_WORDS = {
+  heart: ["vida","salud","curar","sanar","amor","alma","paz"],
+  bomb: ["boom","bomba","explotar","fuego","dinamita","tanque"],
+  shield: ["escudo","bloquear","blindar","proteger","coche"],
+  slow: ["lento","pausa","calma","dormir","raiz","nieve"]
+};
+const PU_TYPES = ['heart','bomb','shield','slow'];
+const PU_ICONS = { heart:'💖', bomb:'💣', shield:'🛡️', slow:'⏳' };
+const PU_COLORS = { heart:'#ff6b9d', bomb:'#ff4d6a', shield:'#4dabff', slow:'#ffd93d' };
+
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 if(!ctx.roundRect){ ctx.roundRect = function(x,y,w,h){ this.rect(x,y,w,h); return this; }; }
@@ -273,10 +283,10 @@ const laneY = i => 150 + i * 95;
 const WALL_X = 150;
 
 let state = 'menu'; // menu, play, paused, end
-let zombies = [], bullets = [], parts = [], floats = [];
+let zombies = [], powerUps = [], bullets = [], parts = [], floats = [];
 let tommy = { lane: 2, y: laneY(2), flash: 0 };
 let score=0, combo=0, bestCombo=0, kills=0, charsOk=0, charsBad=0;
-let wallHP=100, timeLeft=120, elapsed=0, spawnT=0, shakeT=0, attackT=0;
+let wallHP=100, timeLeft=120, elapsed=0, spawnT=0, puSpawnT=0, shakeT=0, attackT=0;
 let stars = Array.from({length:100},()=>({x:Math.random()*W,y:Math.random()*150,r:Math.random()*1.7+.4,tw:Math.random()*6.28,sp:Math.random()*.3+.1}));
 
 // POWER-UP SYSTEM
@@ -357,6 +367,17 @@ function spawnZombie(){
   // Speak the word
   speakWord(word);
 }
+function spawnPowerUp(){
+  const type = PU_TYPES[(Math.random()*PU_TYPES.length)|0];
+  const wordPool = PU_WORDS[type];
+  const word = wordPool[(Math.random()*wordPool.length)|0];
+  const lane = (Math.random()*LANES)|0;
+  powerUps.push({
+    type, lane, x: W + 50, word, i:0, speed: 35 + Math.random()*15,
+    wob: Math.random()*6.28, glow: 0
+  });
+  speakWord(PU_ICONS[type] + ' ' + word);
+}
 function closest(){
   if(!zombies.length) return null;
   let c=zombies[0];
@@ -364,61 +385,23 @@ function closest(){
   return c;
 }
 function findTarget(ch){
+  // First check power-ups (they have priority for shorter words)
+  let bestPU=null;
+  for(const p of powerUps){
+    if(p.word[p.i]===ch && (!bestPU || p.x<bestPU.x)) bestPU=p;
+  }
+  if(bestPU) return {target:bestPU, isPowerUp:true};
+  // Then check zombies
   let best=null;
   for(const z of zombies){
     if(z.word[z.i]===ch && (!best || z.x<best.x)) best=z;
   }
-  return best;
+  return best ? {target:best, isPowerUp:false} : null;
 }
 function showMsg(t, color, dur){
   bigmsg.textContent = t; bigmsg.style.color = color||'#fff'; bigmsg.style.opacity = 1;
   clearTimeout(showMsg._t);
   showMsg._t = setTimeout(()=>bigmsg.style.opacity=0, dur||900);
-}
-
-// POWER-UP CHECK
-function checkPowerUps(){
-  // Heart at x5 (every 5 combo)
-  if(combo > 0 && combo % 5 === 0 && combo > pu.heartCount * 5){
-    pu.heartCount++;
-    wallHP = Math.min(100, wallHP + 25);
-    showMsg('💖 +25% BARRICADA', '#ff6b9d', 1200);
-    pulseBadge('pu-heart');
-    beep(523,.2,'sine',.1); setTimeout(()=>beep(659,.2,'sine',.1),120); setTimeout(()=>beep(784,.3,'sine',.1),240);
-  }
-  // Slow at x8
-  if(combo === 8 || (combo > 8 && combo % 8 === 0)){
-    pu.slowActive = true; pu.slowTimer = 4;
-    showMsg('⏳ ZOMBIES RALENTIZADOS', '#ffd93d', 1000);
-    pulseBadge('pu-slow');
-    beep(440,.15,'triangle',.08);
-  }
-  // Bomb at x10
-  if(combo > 0 && combo % 10 === 0){
-    pu.bombCount++;
-    // Destroy all zombies
-    for(const z of zombies) burst(z.x, laneY(z.lane)-20, '#ff4d6a', 16);
-    zombies = [];
-    showMsg('💣 BOMBA NUCLEAR', '#ff4d6a', 1400);
-    bombFlash.style.opacity = '1';
-    setTimeout(()=>bombFlash.style.opacity = '0', 300);
-    shakeT = 0.6;
-    beep(120,.4,'sawtooth',.15); setTimeout(()=>beep(80,.5,'sawtooth',.12),200);
-    pulseBadge('pu-bomb');
-  }
-  // Shield at x15
-  if(combo > 0 && combo % 15 === 0){
-    pu.shieldActive = true; pu.shieldTimer = 5;
-    showMsg('🛡️ ESCUDO ACTIVADO', '#4dabff', 1200);
-    shieldOverlay.style.opacity = '1';
-    pulseBadge('pu-shield');
-    beep(600,.2,'sine',.1); setTimeout(()=>beep(800,.2,'sine',.1),150);
-  }
-}
-function pulseBadge(id){
-  const el = document.getElementById(id);
-  el.style.transform = 'scale(1.15)';
-  setTimeout(()=>el.style.transform = '', 400);
 }
 
 // AUDIO
@@ -480,31 +463,64 @@ canvas.addEventListener('pointerdown', ()=>{
 });
 
 function typeChar(ch){
-  const t = findTarget(ch);
-  if(!t){
+  const result = findTarget(ch);
+  if(!result){
     charsBad++; combo=0; shakeT=0.25; sBad();
-    // Reset power-up tracking on miss
-    pu.heartCount = Math.floor(combo/5);
     floats.push({x:200, y:tommy.y-40, txt:'✖', life:.7, color:'#ff4d6a'});
     canvas.classList.remove('shake'); void canvas.offsetWidth; canvas.classList.add('shake');
     return;
   }
+  const t = result.target;
   tommy.lane = t.lane;
   t.i++; charsOk++; tommy.flash=0.12;
-  bullets.push({x:130, y:tommy.y-6, tx:t.x-14, ty:laneY(t.lane)-14, t:0, z:t});
-  burst(130, tommy.y-6, '#ffd93d', 3);
+  bullets.push({x:130, y:tommy.y-6, tx:t.x-14, ty:laneY(t.lane)-14, t:0, z:t, isPU:result.isPowerUp});
+  burst(130, tommy.y-6, result.isPowerUp ? PU_COLORS[t.type] : '#ffd93d', 3);
   sShoot();
   score += 10 + Math.min(combo,25) * 2;
   if(t.i>=t.word.length){
-    kills++; combo++; bestCombo=Math.max(bestCombo,combo);
-    score += 100 + combo*20;
-    burst(t.x, laneY(t.lane)-20, '#00ff88', 24);
-    floats.push({x:t.x, y:laneY(t.lane)-60, txt:'+'+(100+combo*20), life:1.1, color:'#00ff88'});
-    zombies.splice(zombies.indexOf(t),1);
-    sKill();
-    checkPowerUps();
-    if(combo>1 && combo%5!==0 && combo%8!==0 && combo%10!==0 && combo%15!==0)
-      showMsg(combo>=3?'🔥 x'+combo+' COMBO!':'', '#ffd93d', 700);
+    if(result.isPowerUp){
+      // Power-up collected!
+      activatePowerUp(t);
+      powerUps.splice(powerUps.indexOf(t),1);
+    } else {
+      // Zombie killed
+      kills++; combo++; bestCombo=Math.max(bestCombo,combo);
+      score += 100 + combo*20;
+      burst(t.x, laneY(t.lane)-20, '#00ff88', 24);
+      floats.push({x:t.x, y:laneY(t.lane)-60, txt:'+'+(100+combo*20), life:1.1, color:'#00ff88'});
+      zombies.splice(zombies.indexOf(t),1);
+      sKill();
+      if(combo>1) showMsg(combo>=3?'🔥 x'+combo+' COMBO!':'', '#ffd93d', 700);
+    }
+  }
+}
+
+function activatePowerUp(puItem){
+  const type = puItem.type;
+  const icon = PU_ICONS[type];
+  burst(puItem.x, laneY(puItem.lane)-20, PU_COLORS[type], 30);
+  sKill();
+  if(type === 'heart'){
+    wallHP = Math.min(100, wallHP + 25);
+    showMsg(icon+' +25% BARRICADA', '#ff6b9d', 1200);
+    beep(523,.2,'sine',.1); setTimeout(()=>beep(659,.2,'sine',.1),120); setTimeout(()=>beep(784,.3,'sine',.1),240);
+  } else if(type === 'bomb'){
+    for(const z of zombies) burst(z.x, laneY(z.lane)-20, '#ff4d6a', 16);
+    zombies = [];
+    showMsg(icon+' BOMBA NUCLEAR', '#ff4d6a', 1400);
+    bombFlash.style.opacity = '1';
+    setTimeout(()=>bombFlash.style.opacity = '0', 300);
+    shakeT = 0.6;
+    beep(120,.4,'sawtooth',.15); setTimeout(()=>beep(80,.5,'sawtooth',.12),200);
+  } else if(type === 'shield'){
+    pu.shieldActive = true; pu.shieldTimer = 6;
+    showMsg(icon+' ESCUDO ACTIVADO', '#4dabff', 1200);
+    shieldOverlay.style.opacity = '1';
+    beep(600,.2,'sine',.1); setTimeout(()=>beep(800,.2,'sine',.1),150);
+  } else if(type === 'slow'){
+    pu.slowActive = true; pu.slowTimer = 5;
+    showMsg(icon+' ZOMBIES RALENTIZADOS', '#ffd93d', 1000);
+    beep(440,.15,'triangle',.08);
   }
 }
 function burst(x,y,color,n){
@@ -527,10 +543,14 @@ function update(dt){
   if(pu.slowActive){ pu.slowTimer-=dt; if(pu.slowTimer<=0){ pu.slowActive=false; } }
   if(pu.shieldActive){ pu.shieldTimer-=dt; if(pu.shieldTimer<=0){ pu.shieldActive=false; shieldOverlay.style.opacity='0'; } }
 
-  // Spawn
+  // Spawn zombies
   spawnT-=dt;
   const interval = Math.max(0.7, 2.4 - elapsed*0.014);
   if(spawnT<=0){ spawnT=interval; spawnZombie(); if(elapsed>55 && Math.random()<.45) spawnZombie(); }
+
+  // Spawn power-ups (every 12-20 seconds)
+  puSpawnT-=dt;
+  if(puSpawnT<=0){ puSpawnT=12+Math.random()*8; spawnPowerUp(); }
 
   tommy.y += (laneY(tommy.lane)-tommy.y)*Math.min(1,dt*12);
   tommy.flash=Math.max(0,tommy.flash-dt);
@@ -550,12 +570,19 @@ function update(dt){
           burst(WALL_X, laneY(z.lane), '#c98a4b', 8);
           if(wallHP<=0){ wallHP=0; return lose(); }
         } else {
-          // Shield blocks - show deflection
           burst(WALL_X, laneY(z.lane), '#4dabff', 6);
           floats.push({x:WALL_X+30, y:laneY(z.lane)-20, txt:'🛡️', life:.8, color:'#4dabff'});
         }
       }
     }
+  }
+
+  // Power-ups movement (float across screen, disappear if not collected)
+  for(let i=powerUps.length-1;i>=0;i--){
+    const p=powerUps[i];
+    p.wob+=dt*5; p.glow+=dt*4;
+    p.x -= p.speed*dt;
+    if(p.x < -60 || p.i >= p.word.length){ powerUps.splice(i,1); }
   }
 
   // Bullets
@@ -722,10 +749,39 @@ function draw(dt){
     }
   }
 
+  // Power-ups (floating items)
+  for(const p of powerUps){
+    const y=laneY(p.lane)+Math.sin(p.wob)*6;
+    const color = PU_COLORS[p.type];
+    // Glow ring
+    ctx.strokeStyle=color; ctx.lineWidth=3; ctx.globalAlpha=0.4+Math.sin(p.glow)*0.3;
+    ctx.beginPath(); ctx.arc(p.x, y, 28+Math.sin(p.glow)*4, 0, 7); ctx.stroke();
+    ctx.globalAlpha=1;
+    // Icon
+    ctx.font='40px serif';
+    ctx.fillText(PU_ICONS[p.type], p.x-20, y+14);
+    // Word tag with colored border
+    ctx.font='bold 18px monospace';
+    const wdt = ctx.measureText(p.word).width+20;
+    const bx=p.x-wdt/2, by=y-44;
+    ctx.fillStyle='rgba(0,0,0,.85)';
+    ctx.beginPath(); ctx.roundRect(bx,by,wdt,28,8); ctx.fill();
+    ctx.strokeStyle=color; ctx.lineWidth=2; ctx.stroke();
+    let lx=bx+10;
+    for(let k=0;k<p.word.length;k++){
+      ctx.fillStyle = k<p.i ? color : (k===p.i ? '#fff' : '#6a7a94');
+      ctx.fillText(p.word[k], lx, by+20); lx+=ctx.measureText(p.word[k]).width+1;
+      if(k===p.i){ ctx.fillStyle=color; ctx.fillRect(lx-ctx.measureText(p.word[k]).width-2,by+22,ctx.measureText(p.word[k]).width,3); }
+    }
+    // Label
+    ctx.font='bold 11px sans-serif'; ctx.fillStyle=color;
+    ctx.fillText('⚡ '+p.type.toUpperCase(), p.x-20, y+36);
+  }
+
   // Bullets
   for(const b of bullets){
     const x=b.x+(b.tx-b.x)*b.t, y=b.y+(b.ty-b.y)*b.t;
-    ctx.strokeStyle='#ffe66d'; ctx.lineWidth=3;
+    ctx.strokeStyle=b.isPU ? PU_COLORS[b.z.type] : '#ffe66d'; ctx.lineWidth=3;
     ctx.beginPath(); ctx.moveTo(b.x,b.y); ctx.lineTo(x,y); ctx.stroke();
     ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(x,y,4,0,7); ctx.fill();
   }
@@ -750,10 +806,10 @@ function draw(dt){
 function startGame(){
   $('menu').classList.add('hidden'); $('end').classList.add('hidden');
   pauseOverlay.classList.remove('show');
-  state='play'; zombies=[]; bullets=[]; parts=[]; floats=[];
+  state='play'; zombies=[]; powerUps=[]; bullets=[]; parts=[]; floats=[];
   score=0; combo=0; bestCombo=0; kills=0; charsOk=0; charsBad=0;
-  wallHP=100; timeLeft=120; elapsed=0; spawnT=0; tommy.lane=2;
-  pu = { heartCount:0, slowActive:false, slowTimer:0, bombCount:0, shieldActive:false, shieldTimer:0 };
+  wallHP=100; timeLeft=120; elapsed=0; spawnT=0; puSpawnT=8; tommy.lane=2;
+  pu = { slowActive:false, slowTimer:0, shieldActive:false, shieldTimer:0 };
   shieldOverlay.style.opacity='0';
   showMsg('¡SOBREVIVE! 🧟', '#00ff88');
   if(window.matchMedia && matchMedia('(pointer:coarse)').matches){
