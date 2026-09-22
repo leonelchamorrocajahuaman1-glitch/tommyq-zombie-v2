@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Feliz Dia de la Novia - LUZ 💗</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0008;color:#ffe0f0;font-family:Georgia,serif;min-height:100vh;overflow-x:hidden;text-align:center}
+.fondo{position:fixed;inset:0;background:radial-gradient(circle at 50% 30%,#4a0026 0%,#1a000f 45%,#000 100%);z-index:-2}
+canvas#corazones{position:fixed;inset:0;z-index:-1;pointer-events:none}
+h1{margin-top:26px;font-size:clamp(28px,6vw,52px);color:#ff66cc;text-shadow:0 0 20px #ff0077}
+.nombres{margin:10px auto;display:inline-block;border:1px solid #ff66cc;padding:8px 22px;border-radius:30px;letter-spacing:3px;color:#ffb3dd;background:rgba(58,0,30,.6)}
+.corazon-grande{font-size:clamp(90px,20vw,160px);margin:20px 0 0;animation:latido 1.1s infinite;display:block;filter:drop-shadow(0 0 30px #ff3399)}
+@keyframes latido{0%,100%{transform:scale(1)}25%{transform:scale(1.15)}40%{transform:scale(1)}60%{transform:scale(1.18)}}
+.sub{font-size:clamp(16px,4vw,24px);color:#ff99cc;margin:10px 20px;line-height:1.5}
+.frases{margin:24px auto;max-width:600px;padding:0 20px;display:flex;flex-direction:column;gap:10px}
+.frase{background:rgba(255,51,153,.12);border:1px solid rgba(255,102,204,.35);padding:12px 16px;border-radius:14px;font-size:17px;animation:flotar 3s ease-in-out infinite}
+.frase:nth-child(2n){animation-delay:.5s}.frase:nth-child(3n){animation-delay:1s}
+@keyframes flotar{50%{transform:translateY(-5px)}}
+button.carta{position:fixed;bottom:22px;right:22px;width:62px;height:62px;border-radius:50%;border:none;font-size:28px;cursor:pointer;background:linear-gradient(135deg,#ff3399,#ff66cc);box-shadow:0 0 18px #ff3399}
+#cartaFondo{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;padding:20px;z-index:10}
+#cartaFondo.ver{display:flex}
+#carta{background:linear-gradient(160deg,#3a001e,#150009);border:1px solid #ff66cc;border-radius:20px;max-width:560px;width:100%;max-height:85vh;overflow:auto;padding:34px 26px;text-align:left}
+#carta h2{text-align:center;color:#ff66cc;margin-bottom:16px}
+#carta p{margin-bottom:14px;line-height:1.7}
+#carta .centro{text-align:center;font-style:italic}
+#cerrar{float:right;background:none;border:none;color:#ffb3dd;font-size:22px;cursor:pointer}
+.instruccion{margin:18px;color:#ffb3dd;font-size:14px}
+</style>
+</head>
+<body>
+<div class="fondo"></div>
+<canvas id="corazones"></canvas>
+<h1>Feliz dia de la novia 💗</h1>
+<div><span class="nombres">LUZ ✿ FRANCO</span></div>
+<span class="corazon-grande">❤️</span>
+<p class="sub">LUZ te amo 💖<br>FRANCO ❤️ LUZ por siempre</p>
+<div class="frases">
+<div class="frase">Feliz dia de la novia 💗</div>
+<div class="frase">Eres mi novia perfecta ✨</div>
+<div class="frase">Mi novia, mi universo 🌌</div>
+<div class="frase">La novia mas hermosa 💖</div>
+<div class="frase">Contigo por siempre 💞</div>
+<div class="frase">Mi corazon es tuyo 💓</div>
+</div>
+<p class="instruccion">Toca el 💌 de abajo a la derecha para leer la carta</p>
+<button class="carta" onclick="document.getElementById('cartaFondo').classList.add('ver')">💌</button>
+<div id="cartaFondo" onclick="if(event.target===this)this.classList.remove('ver')">
+<div id="carta">
+<button id="cerrar" onclick="document.getElementById('cartaFondo').classList.remove('ver')">✕</button>
+<h2>❤️ Feliz Dia de la Novia, LUZ ❤️</h2>
+<p class="centro">Mi novia,</p>
+<p>Mi amor, hoy es un dia muy especial para celebrar lo mucho que significas para mi.</p>
+<p>Desde que llegaste a mi vida, cada dia es mejor. Tu sonrisa ilumina mis dias y tu amor me da la fuerza para ser mejor persona cada dia.</p>
+<p>Gracias por cada momento, por cada risa, por cada abrazo. Eres la persona mas maravillosa que conozco y me siento afortunado de tenerte a mi lado.</p>
+<p>Te amo con todo mi corazon. Hoy, mañana y siempre.</p>
+<p>Con todo mi amor,</p>
+<p class="centro">Sábado, Día de la Novia<br>Con amor, FRANCO ❤️</p>
+</div>
+</div>
+<script>
+// corazones flotando sin librerias
+var c=document.getElementById('corazones'),x=c.getContext('2d'),P=[];
+function rs(){c.width=innerWidth;c.height=innerHeight}rs();addEventListener('resize',rs);
+for(var i=0;i<70;i++)P.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,s:Math.random()*22+12,v:Math.random()*1.2+.4,o:Math.random()*.7+.3,e:['❤️','💗','💖','💞','🌸'][Math.floor(Math.random()*5)]});
+(function an(){x.clearRect(0,0,c.width,c.height);P.forEach(function(p){x.globalAlpha=p.o;x.font=p.s+'px serif';x.fillText(p.e,p.x,p.y);p.y-=p.v;if(p.y<-30){p.y=c.height+30;p.x=Math.random()*c.width}});x.globalAlpha=1;requestAnimationFrame(an)})();
+</script>
+</body>
+</html>
